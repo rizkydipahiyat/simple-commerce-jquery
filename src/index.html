@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jquery Add To Cart</title>
+  <link rel="stylesheet" href="/dist/output.css">
+</head>
+<body>
+  <!-- Navbar Section -->
+  <header class="container mx-auto max-w-full px-16 py-5 bg-zinc-400">
+    <nav class="flex items-center justify-between gap-x-4">
+      <div class="cursor-pointer">
+        <span>LOGO</span>
+      </div>
+      <div id="cart-length" class="cursor-pointer">
+        <span>Cart</span>
+      </div>
+    </nav>
+  </header>
+  <!-- End Navbar Section -->
+
+  <!-- Product Section -->
+  <section class="container mx-auto max-w-full px-16 py-5">
+    <div class="flex items-center gap-x-5">
+      <div class="py-5">
+        <input type="text" id="search" class="px-2 py-2 border-b-[1px] border-zinc-700 outline-none" placeholder="Search product by name...">
+      </div>
+      <div>
+        <select name="" id="category" class="custom-select outline-none px-2 py-2">
+          <option value="0">All Category</option>
+      </select>
+      </div>
+    </div>
+    <div>
+    <div id="product-list" class="grid grid-cols-5 gap-4">
+      <!-- Looping Jquery Product -->
+    </div>
+  </section>
+  <!-- End Product Section -->
+
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>'
+  <script>
+    var products = [];
+    var cart = [];
+    $(document).ready(function () {
+
+      $.ajax({
+        url: 'https://fakestoreapi.com/products',
+        method: "GET",
+        success: function(data) {
+          products = data;
+
+          getProducts(products);
+
+          $('#product-list').on('click', '#cart', function() {
+            var productId = $(this).attr('data-id');
+            var productToCart = products.find(product => product.id == productId);
+
+            // Cek apakah produk sudah ada dalam keranjang
+            var existingProduct = cart.find(item => item.id == productId);
+
+            if (existingProduct) {
+              // Jika sudah ada, tambahkan jumlahnya
+              existingProduct.quantity++;
+            } else {
+              // Jika belum ada, tambahkan produk ke keranjang dengan jumlah 1
+              productToCart.quantity = 1;
+              cart.push(productToCart);
+            }
+            showCart(cart);
+          })
+
+          $('#search').on('keyup', function() {
+            var keyword = $(this).val().toLowerCase();
+
+            if(keyword.trim().length) {
+              let filterProducts = products.filter(product => {
+                if(product.title.toLowerCase().indexOf(keyword) > -1) {
+                  return product;
+                }
+              })
+              setTimeout(() => {
+                getProducts(filterProducts)
+              }, 3000)
+            } else {
+              getProducts(products)
+            }
+          })
+        }
+      })
+    })
+
+    $.get('https://fakestoreapi.com/products/categories', function (data) {
+      data.map(ctg => $('#category').append(`<option value="${ctg}">${ctg}</option>`))
+    })
+    
+    $("#category").on("change", function () {
+      let selectedCategory = $(this).val();
+      if(selectedCategory != 0) {
+        let filterProductCategory = products.filter(product => {
+          if (product.category === selectedCategory) {
+              return product;
+          }
+        })
+        getProducts(filterProductCategory)
+      } else {
+        getProducts(products)
+      }
+    })
+    function getProducts(products) {
+      var productList = $('#product-list');
+      productList.empty();
+
+      products.map(product => {
+        productList.append(`
+        <div class="flex flex-col w-52 gap-y-2 bg-slate-100 px-4 py-2 rounded-md" key=${product.id}>
+          <img src=${product.image} class="w-48 h-48" alt="product">
+          <span>${product.title}</span>
+          <span>$${product.price}</span>
+          <button id="cart" class="w-full bg-zinc-400 p-2 rounded-md text-white" data-id="${product.id}">Add To Cart</button>
+        </div>
+        `)
+      })
+    }
+
+    function showCart(cart) {
+      var cartList = $('#cart-length');
+      var sum = cart.reduce((acc, item) => {
+        const totalProduct = cart.find((i) => i.id == item.id);
+        return acc + item.quantity;
+      }, 0)
+
+      cartList.empty();
+
+      cartList.append(`<span class="px-2">Cart</span>`)
+      cartList.append(`<span>${sum}</span>`)
+    }
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
